@@ -1,0 +1,71 @@
+<header class="header">
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="/" class="logo">
+                    <h2>AdvanceTravels</h2>
+                </a>
+            </div>
+            
+            <div class="nav-menu" id="nav-menu">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#countries" class="nav-link">Countries</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#process" class="nav-link">Process</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#testimonials" class="nav-link">Success Stories</a>
+                    </li>
+                    <% if (typeof user !== 'undefined' && user) { %>
+                    <li class="nav-item">
+                        <a href="/dashboard" class="nav-link">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" onclick="logout()" class="nav-link">Logout</a>
+                    </li>
+                    <% } else { %>
+                    <li class="nav-item">
+                        <a href="#" onclick="openLoginModal()" class="nav-link">Login</a>
+                    </li>
+                    <% } %>
+                </ul>
+            </div>
+            
+            <div class="nav-contact">
+                <a href="tel:+1234567890" class="contact-btn">
+                    <span>📞</span>
+                    Call Now
+                </a>
+            </div>
+            
+            <div class="nav-toggle" id="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Login to Your Account</h3>
+        <form id="loginForm">
+            <div class="form-group">
+                <input type="email" id="loginEmail" placeholder="Email Address" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="loginPassword" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+        <p class="modal-footer">Don't have an account? <a href="#hero">Apply now</a></p>
+    </div>
+</div>
