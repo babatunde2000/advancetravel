@@ -18,7 +18,7 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-hero: linear-gradient(135deg, rgba(30, 64, 175, 0.9) 0%, rgba(6, 182, 212, 0.9) 100%);
 }
 
 * {
@@ -42,6 +42,42 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+}
+
+/* Hero Background Slideshow */
+.hero-slideshow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.hero-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+}
+
+.hero-slide.active {
+  opacity: 1;
+}
+
+.hero-slide::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--gradient-hero);
 }
 
 /* Preloader */
@@ -172,26 +208,6 @@ body {
   width: 100%;
 }
 
-.contact-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: var(--primary-color);
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  margin-left: 2rem;
-}
-
-.contact-btn:hover {
-  background: var(--primary-dark);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
 .nav-toggle {
   display: none;
   flex-direction: column;
@@ -207,9 +223,20 @@ body {
   border-radius: 2px;
 }
 
+.nav-toggle.active span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.nav-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
+}
+
 /* Hero Section */
 .hero {
-  background: var(--gradient-hero);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -225,13 +252,14 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  opacity: 0.1;
+  z-index: 1;
 }
 
 .hero-particles {
   position: absolute;
   width: 100%;
   height: 100%;
+  z-index: 2;
   background-image: 
     radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
     radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
@@ -252,7 +280,7 @@ body {
   gap: 4rem;
   align-items: center;
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 .hero-text {
@@ -451,11 +479,14 @@ body {
 .country-card {
   background: white;
   border-radius: 20px;
-  padding: 2rem;
+  padding: 0;
   box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
   cursor: pointer;
   border: 1px solid var(--border-color);
+  overflow: hidden;
+  height: 300px;
+  position: relative;
 }
 
 .country-card:hover {
@@ -463,18 +494,57 @@ body {
   box-shadow: var(--shadow-xl);
 }
 
-.country-flag {
-  font-size: 3rem;
+.country-map {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: opacity 0.5s ease;
+}
+
+.country-details {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 2rem;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.country-card:hover .country-map {
+  opacity: 0;
+}
+
+.country-card:hover .country-details {
+  opacity: 1;
+}
+
+.country-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  color: white;
+  padding: 2rem;
   text-align: center;
-  margin-bottom: 1rem;
 }
 
 .country-card h3 {
   font-size: 1.5rem;
   font-weight: 700;
-  text-align: center;
   margin-bottom: 2rem;
-  color: var(--text-primary);
+  color: white;
 }
 
 .country-stats {
@@ -489,7 +559,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .stat:last-child {
@@ -497,12 +567,12 @@ body {
 }
 
 .stat .label {
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
 }
 
 .stat .value {
-  color: var(--primary-color);
+  color: #fbbf24;
   font-weight: 700;
 }
 
@@ -514,17 +584,123 @@ body {
 
 .benefit {
   padding: 0.5rem 1rem;
-  background: rgba(30, 64, 175, 0.1);
-  color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 500;
 }
 
+/* Popular Visa Section */
+.popular-visa-section {
+  padding: 6rem 0;
+  background: white;
+}
+
+.visa-intro {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 4rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+}
+
+.visa-intro h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.visa-intro p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.visa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.visa-card {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  height: 250px;
+  position: relative;
+}
+
+.visa-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl);
+}
+
+.visa-flag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: opacity 0.5s ease;
+}
+
+.visa-info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.95), rgba(6, 182, 212, 0.95));
+  color: white;
+  padding: 2rem;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.visa-card:hover .visa-flag {
+  opacity: 0;
+}
+
+.visa-card:hover .visa-info {
+  opacity: 1;
+}
+
+.visa-info h4 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.visa-types {
+  list-style: none;
+  padding: 0;
+}
+
+.visa-types li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 500;
+}
+
+.visa-types li:last-child {
+  border-bottom: none;
+}
+
 /* Occupations Section */
 .occupations-section {
   padding: 6rem 0;
-  background: white;
+  background: var(--background-light);
 }
 
 .salary-table-container {
@@ -565,7 +741,7 @@ body {
 /* Opportunities Section */
 .opportunities-section {
   padding: 6rem 0;
-  background: var(--background-light);
+  background: white;
 }
 
 .opportunities-grid {
@@ -582,6 +758,8 @@ body {
   transition: all 0.3s ease;
   text-align: center;
   border: 1px solid var(--border-color);
+  overflow: hidden;
+  position: relative;
 }
 
 .opportunity-card:hover {
@@ -589,8 +767,12 @@ body {
   box-shadow: var(--shadow-xl);
 }
 
-.opportunity-icon {
-  font-size: 3rem;
+.opportunity-image {
+  width: 100%;
+  height: 150px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
   margin-bottom: 1rem;
 }
 
@@ -628,7 +810,7 @@ body {
 /* Why Choose Us Section */
 .why-section {
   padding: 6rem 0;
-  background: white;
+  background: var(--background-light);
 }
 
 .features-grid {
@@ -641,14 +823,13 @@ body {
   display: flex;
   gap: 1.5rem;
   padding: 2rem;
-  background: var(--background-light);
+  background: white;
   border-radius: 20px;
   transition: all 0.3s ease;
   border: 1px solid var(--border-color);
 }
 
 .feature-card:hover {
-  background: white;
   box-shadow: var(--shadow-lg);
   transform: translateY(-5px);
 }
@@ -673,7 +854,7 @@ body {
 /* Process Section */
 .process-section {
   padding: 6rem 0;
-  background: var(--background-light);
+  background: white;
 }
 
 .process-timeline {
@@ -715,6 +896,16 @@ body {
   flex-shrink: 0;
 }
 
+.step-image {
+  width: 80px;
+  height: 80px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
+  flex-shrink: 0;
+  margin-left: 1rem;
+}
+
 .step-content h3 {
   font-size: 1.5rem;
   font-weight: 700;
@@ -727,10 +918,95 @@ body {
   line-height: 1.6;
 }
 
+/* Latest Updates Section */
+.updates-section {
+  padding: 6rem 0;
+  background: var(--background-light);
+}
+
+.updates-carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.updates-track {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.update-card {
+  min-width: 350px;
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  margin-right: 2rem;
+  transition: all 0.3s ease;
+}
+
+.update-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl);
+}
+
+.update-image {
+  width: 100%;
+  height: 200px;
+  background-size: cover;
+  background-position: center;
+}
+
+.update-content {
+  padding: 2rem;
+}
+
+.update-date {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.update-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.update-excerpt {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.carousel-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.carousel-btn {
+  width: 50px;
+  height: 50px;
+  border: none;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.carousel-btn:hover {
+  background: var(--primary-dark);
+  transform: scale(1.1);
+}
+
 /* Testimonials Section */
 .testimonials-section {
   padding: 6rem 0;
-  background: white;
+  background: var(--background-light);
 }
 
 .testimonials-slider {
@@ -748,7 +1024,7 @@ body {
 
 .testimonial-card {
   min-width: 100%;
-  background: var(--background-light);
+  background: white;
   padding: 3rem;
   text-align: center;
   border: 1px solid var(--border-color);
@@ -762,8 +1038,19 @@ body {
   line-height: 1.8;
 }
 
+.testimonial-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  margin: 0 auto 1rem;
+  border: 4px solid var(--primary-color);
+}
+
 .testimonial-author {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -802,48 +1089,6 @@ body {
 .testimonial-btn:hover {
   background: var(--primary-dark);
   transform: scale(1.1);
-}
-
-/* Contact Banner */
-.contact-banner {
-  padding: 4rem 0;
-  background: var(--gradient-primary);
-  color: white;
-  text-align: center;
-}
-
-.banner-content h2 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-.banner-content p {
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
-  opacity: 0.9;
-}
-
-.contact-options {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-}
-
-.contact-btn.whatsapp {
-  background: #25d366;
-}
-
-.contact-btn.call {
-  background: #2563eb;
-}
-
-.contact-btn.whatsapp:hover {
-  background: #22c55e;
-}
-
-.contact-btn.call:hover {
-  background: #1d4ed8;
 }
 
 /* Footer */
@@ -1144,6 +1389,235 @@ body {
 
 .chat-input-container button:hover {
   background: var(--primary-dark);
+}
+
+/* Extended Registration Form */
+.extended-form-section {
+  padding: 8rem 0 4rem;
+  background: var(--background-light);
+  min-height: 100vh;
+}
+
+.extended-form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 20px;
+  padding: 3rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+}
+
+.profile-picture-upload {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.profile-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--background-light);
+  border: 4px dashed var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.profile-preview:hover {
+  border-color: var(--primary-color);
+  background: rgba(30, 64, 175, 0.05);
+}
+
+.profile-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-preview-placeholder {
+  font-size: 2rem;
+  color: var(--text-light);
+}
+
+/* Dashboard Pricing Card */
+.pricing-card {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.pricing-card h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.pricing-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.pricing-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.pricing-label {
+  font-weight: 600;
+}
+
+.pricing-amount {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.pay-now-btn {
+  background: white;
+  color: var(--primary-color);
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.pay-now-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Payment Modal */
+.payment-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+}
+
+.payment-modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: var(--shadow-xl);
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.payment-option {
+  padding: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.payment-option:hover {
+  border-color: var(--primary-color);
+  background: rgba(30, 64, 175, 0.05);
+}
+
+.payment-option h4 {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.payment-option p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Logout Confirmation Modal */
+.logout-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+}
+
+.logout-modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: var(--shadow-xl);
+}
+
+.logout-modal h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.logout-modal p {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.logout-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn-cancel {
+  background: var(--text-light);
+  color: white;
+}
+
+.btn-cancel:hover {
+  background: var(--text-secondary);
+}
+
+.btn-confirm {
+  background: var(--error-color);
+  color: white;
+}
+
+.btn-confirm:hover {
+  background: #dc2626;
 }
 
 /* Application Form Page */
@@ -2248,11 +2722,6 @@ body {
     display: flex;
   }
   
-  .contact-btn {
-    margin-left: 0;
-    margin-top: 1rem;
-  }
-  
   .hero-title {
     font-size: 2.5rem;
   }
@@ -2272,11 +2741,6 @@ body {
   .process-step {
     flex-direction: column;
     text-align: center;
-  }
-  
-  .contact-options {
-    flex-direction: column;
-    gap: 1rem;
   }
   
   .footer-content {
@@ -2442,7 +2906,6 @@ body {
   .header,
   .nav-toggle,
   .chat-widget,
-  .contact-banner,
   .footer,
   .btn,
   .action-btn {

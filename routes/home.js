@@ -36,8 +36,28 @@ const upload = multer({
 // Home page
 router.get('/', (req, res) => {
   res.render('home', { 
-    title: 'AdvanceTravels - Land Your Dream Job Abroad',
+    title: 'Advanze Travels - Land Your Dream Job Abroad',
     user: req.session.user
+  });
+});
+
+// About page
+router.get('/about', (req, res) => {
+  res.render('about', { 
+    title: 'About Us - Advanze Travels',
+    user: req.session.user
+  });
+});
+
+// Extended registration page
+router.get('/extended-registration', (req, res) => {
+  if (!req.session.tempUser) {
+    return res.redirect('/');
+  }
+  
+  res.render('extended-registration', { 
+    title: 'Complete Registration - Advanze Travels',
+    user: req.session.tempUser
   });
 });
 
@@ -62,47 +82,43 @@ router.post('/apply', [
     // Check if user already exists
     let user = await User.findOne({ email });
     if (user) {
+      // Store user in session for extended registration
+      req.session.tempUser = {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      };
+      
       return res.json({ 
         success: true, 
-        message: 'Welcome back! Redirecting to your application...',
-        redirect: '/application-form'
+        message: 'Welcome back! Please complete your registration...'
       });
     }
 
-    // Create new user
+    // Store initial data in session for extended registration
     const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    user = new User({
+    
+    req.session.tempUser = {
       name,
       email,
       phone,
       preferredCountry,
       sessionId
-    });
+    };
 
     // Handle resume upload
     if (req.file) {
-      user.documents.push({
+      req.session.tempUser.resume = {
         filename: req.file.filename,
         originalName: req.file.originalname,
         mimetype: req.file.mimetype,
         size: req.file.size
-      });
+      };
     }
-
-    await user.save();
-
-    // Store user in session
-    req.session.user = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      sessionId: user.sessionId
-    };
 
     res.json({ 
       success: true, 
-      message: 'Application started successfully!',
-      redirect: '/application-form'
+      message: 'Initial application received! Please complete your registration...'
     });
 
   } catch (error) {
@@ -114,27 +130,16 @@ router.post('/apply', [
   }
 });
 
-// Application form page
-router.get('/application-form', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/');
-  }
-  
-  res.render('application-form', { 
-    title: 'Complete Your Application - AdvanceTravels',
-    user: req.session.user
-  });
-});
-
-// Complete application submission
-router.post('/complete-application', [
+// Complete registration submission
+router.post('/complete-registration', [
   body('experience').notEmpty().withMessage('Please select your experience level'),
   body('education').notEmpty().withMessage('Please select your education level'),
   body('profession').trim().isLength({ min: 2 }).withMessage('Please enter your profession'),
-  body('relocationReadiness').notEmpty().withMessage('Please select your relocation readiness')
-], upload.array('documents', 5), async (req, res) => {
+  body('relocationReadiness').notEmpty().withMessage('Please select your relocation readiness'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+], upload.single('profilePicture'), async (req, res) => {
   try {
-    if (!req.session.user) {
+    if (!req.session.tempUser) {
       return res.status(401).json({ success: false, message: 'Session expired' });
     }
 
@@ -146,49 +151,60 @@ router.post('/complete-application', [
       });
     }
 
-    const { experience, education, profession, linkedin, relocationReadiness } = req.body;
+    const { experience, education, profession, linkedin, relocationReadiness, password } = req.body;
+    const tempUser = req.session.tempUser;
     
-    const user = await User.findById(req.session.user.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+    // Create new user with all data
+    const user = new User({
+      name: tempUser.name,
+      email: tempUser.email,
+      phone: tempUser.phone,
+      preferredCountry: tempUser.preferredCountry,
+      sessionId: tempUser.sessionId,
+      experience,
+      education,
+      profession,
+      linkedin,
+      relocationReadiness,
+      password,
+      applicationStatus: 'In Review'
+    });
+
+    // Add resume if uploaded initially
+    if (tempUser.resume) {
+      user.documents.push(tempUser.resume);
     }
 
-    // Update user information
-    user.experience = experience;
-    user.education = education;
-    user.profession = profession;
-    user.linkedin = linkedin;
-    user.relocationReadiness = relocationReadiness;
-    user.applicationStatus = 'In Review';
+    // Handle profile picture upload
+    if (req.file) {
+      user.profilePicture = req.file.filename;
+    }
 
     // Add status history
     user.statusHistory.push({
       status: 'In Review',
-      notes: 'Application completed and submitted for review'
+      notes: 'Registration completed and submitted for review'
     });
-
-    // Handle additional document uploads
-    if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
-        user.documents.push({
-          filename: file.filename,
-          originalName: file.originalname,
-          mimetype: file.mimetype,
-          size: file.size
-        });
-      });
-    }
 
     await user.save();
 
+    // Clear temp user and set actual user session
+    delete req.session.tempUser;
+    req.session.user = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      sessionId: user.sessionId
+    };
+
     res.json({ 
       success: true, 
-      message: 'Application completed successfully!',
+      message: 'Registration completed successfully!',
       redirect: '/dashboard'
     });
 
   } catch (error) {
-    console.error('Complete application error:', error);
+    console.error('Complete registration error:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Something went wrong. Please try again.' 

@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <% if (typeof user !== 'undefined' && user && user.sessionId) { %>
+    <meta name="session-id" content="<%= user.sessionId %>">
+    <meta name="user-name" content="<%= user.name %>">
+    <% } %>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/animations.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +20,7 @@
     <div id="preloader">
         <div class="preloader-content">
             <div class="logo-container">
-                <h2>AdvanceTravels</h2>
+                <h2>Advanze Travels</h2>
             </div>
             <div class="loading-dots">
                 <div class="dot"></div>

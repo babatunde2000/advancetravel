@@ -2,11 +2,29 @@
 
 class AdvanceTravels {
   constructor() {
+    this.heroSlideIndex = 0;
+    this.heroSlides = [
+      'https://images.pexels.com/photos/346885/pexels-photo-346885.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
+      'https://images.pexels.com/photos/1181396/pexels-photo-1181396.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
+      'https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
+      'https://images.pexels.com/photos/1181298/pexels-photo-1181298.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop'
+    ];
+    this.countryPricing = {
+      'Canada': { registration: 800, afterVisa: 3500 },
+      'Australia': { registration: 950, afterVisa: 4500 },
+      'Germany': { registration: 600, afterVisa: 3500 },
+      'United Kingdom': { registration: 500, afterVisa: 3200 },
+      'New Zealand': { registration: 950, afterVisa: 4500 },
+      'United States': { registration: 1200, afterVisa: 5000 },
+      'Denmark': { registration: 700, afterVisa: 3800 },
+      'Sweden': { registration: 700, afterVisa: 3800 }
+    };
     this.init();
   }
 
   init() {
     this.setupPreloader();
+    this.setupHeroSlideshow();
     this.setupScrollEffects();
     this.setupNavigation();
     this.setupForms();
@@ -15,6 +33,9 @@ class AdvanceTravels {
     this.setupAnimations();
     this.setupNotifications();
     this.setupCounters();
+    this.setupCountryCards();
+    this.setupUpdatesCarousel();
+    this.setupLogoutConfirmation();
   }
 
   // Preloader
@@ -30,6 +51,34 @@ class AdvanceTravels {
         }, 1000);
       }
     });
+  }
+
+  // Hero Slideshow
+  setupHeroSlideshow() {
+    const heroBackground = document.querySelector('.hero-slideshow');
+    if (!heroBackground) return;
+
+    // Create slides
+    this.heroSlides.forEach((image, index) => {
+      const slide = document.createElement('div');
+      slide.className = `hero-slide ${index === 0 ? 'active' : ''}`;
+      slide.style.backgroundImage = `url(${image})`;
+      heroBackground.appendChild(slide);
+    });
+
+    // Auto-advance slides
+    setInterval(() => {
+      this.nextHeroSlide();
+    }, 5000);
+  }
+
+  nextHeroSlide() {
+    const slides = document.querySelectorAll('.hero-slide');
+    if (slides.length === 0) return;
+
+    slides[this.heroSlideIndex].classList.remove('active');
+    this.heroSlideIndex = (this.heroSlideIndex + 1) % slides.length;
+    slides[this.heroSlideIndex].classList.add('active');
   }
 
   // Scroll Effects
@@ -113,6 +162,12 @@ class AdvanceTravels {
       applicationForm.addEventListener('submit', this.handleApplicationSubmit.bind(this));
     }
 
+    // Extended registration form
+    const extendedForm = document.getElementById('extendedRegistrationForm');
+    if (extendedForm) {
+      extendedForm.addEventListener('submit', this.handleExtendedFormSubmit.bind(this));
+    }
+
     // Login modal form
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
@@ -123,6 +178,12 @@ class AdvanceTravels {
     document.querySelectorAll('input[type="file"]').forEach(input => {
       input.addEventListener('change', this.handleFileUpload.bind(this));
     });
+
+    // Profile picture upload
+    const profilePictureInput = document.getElementById('profilePicture');
+    if (profilePictureInput) {
+      profilePictureInput.addEventListener('change', this.handleProfilePictureUpload.bind(this));
+    }
 
     // Form validation
     document.querySelectorAll('input, select, textarea').forEach(field => {
@@ -149,11 +210,15 @@ class AdvanceTravels {
       
       if (result.success) {
         this.showNotification(result.message, 'success');
-        if (result.redirect) {
-          setTimeout(() => {
-            window.location.href = result.redirect;
-          }, 1500);
+        // Store selected country for pricing
+        const selectedCountry = formData.get('preferredCountry');
+        if (selectedCountry) {
+          localStorage.setItem('selectedCountry', selectedCountry);
         }
+        
+        setTimeout(() => {
+          window.location.href = '/extended-registration';
+        }, 1500);
       } else {
         this.showNotification(result.message || 'Something went wrong', 'error');
         if (result.errors) {
@@ -162,6 +227,42 @@ class AdvanceTravels {
       }
     } catch (error) {
       console.error('Application submission error:', error);
+      this.showNotification('Network error. Please try again.', 'error');
+    } finally {
+      this.setLoadingState(submitBtn, false);
+    }
+  }
+
+  async handleExtendedFormSubmit(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    this.setLoadingState(submitBtn, true);
+    
+    try {
+      const response = await fetch('/complete-registration', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        this.showNotification('Registration completed successfully!', 'success');
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
+      } else {
+        this.showNotification(result.message || 'Something went wrong', 'error');
+        if (result.errors) {
+          this.displayFormErrors(form, result.errors);
+        }
+      }
+    } catch (error) {
+      console.error('Extended form submission error:', error);
       this.showNotification('Network error. Please try again.', 'error');
     } finally {
       this.setLoadingState(submitBtn, false);
@@ -234,6 +335,35 @@ class AdvanceTravels {
     }
   }
 
+  handleProfilePictureUpload(e) {
+    const file = e.target.files[0];
+    const preview = document.querySelector('.profile-preview');
+    
+    if (file) {
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      
+      if (file.size > maxSize) {
+        this.showNotification('Image size must be less than 2MB', 'error');
+        e.target.value = '';
+        return;
+      }
+      
+      if (!allowedTypes.includes(file.type)) {
+        this.showNotification('Please upload JPG or PNG images only', 'error');
+        e.target.value = '';
+        return;
+      }
+      
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.innerHTML = `<img src="${e.target.result}" alt="Profile Preview">`;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   validateField(e) {
     const field = e.target;
     const value = field.value.trim();
@@ -262,6 +392,11 @@ class AdvanceTravels {
       if (!phoneRegex.test(value)) {
         isValid = false;
         message = 'Please enter a valid phone number';
+      }
+    } else if (field.type === 'password' && value) {
+      if (value.length < 6) {
+        isValid = false;
+        message = 'Password must be at least 6 characters';
       }
     }
 
@@ -312,6 +447,95 @@ class AdvanceTravels {
     }
   }
 
+  // Country Cards
+  setupCountryCards() {
+    const countryCards = document.querySelectorAll('.country-card');
+    
+    countryCards.forEach(card => {
+      // Auto-flip after 3 seconds
+      setTimeout(() => {
+        card.classList.add('auto-flip');
+      }, 3000);
+      
+      // Reset on mouse leave
+      card.addEventListener('mouseleave', () => {
+        setTimeout(() => {
+          card.classList.remove('auto-flip');
+        }, 1000);
+      });
+    });
+  }
+
+  // Updates Carousel
+  setupUpdatesCarousel() {
+    const track = document.getElementById('updatesTrack');
+    const prevBtn = document.getElementById('prevUpdate');
+    const nextBtn = document.getElementById('nextUpdate');
+    
+    if (!track) return;
+    
+    const cards = track.querySelectorAll('.update-card');
+    let currentIndex = 0;
+    
+    const updateCarousel = () => {
+      const cardWidth = cards[0]?.offsetWidth + 32 || 350; // card width + margin
+      const translateX = -currentIndex * cardWidth;
+      track.style.transform = `translateX(${translateX}px)`;
+    };
+    
+    nextBtn?.addEventListener('click', () => {
+      if (currentIndex < cards.length - 1) {
+        currentIndex++;
+        updateCarousel();
+      }
+    });
+    
+    prevBtn?.addEventListener('click', () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateCarousel();
+      }
+    });
+    
+    // Auto-advance
+    setInterval(() => {
+      currentIndex = (currentIndex + 1) % cards.length;
+      updateCarousel();
+    }, 6000);
+  }
+
+  // Logout Confirmation
+  setupLogoutConfirmation() {
+    window.logout = () => {
+      this.openModal('logoutModal');
+    };
+    
+    const confirmBtn = document.getElementById('confirmLogout');
+    const cancelBtn = document.getElementById('cancelLogout');
+    
+    confirmBtn?.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/auth/logout', { method: 'POST' });
+        const result = await response.json();
+        
+        if (result.success) {
+          this.showNotification('Logged out successfully', 'success');
+          this.closeModal('logoutModal');
+          setTimeout(() => {
+            window.location.href = result.redirect;
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        this.showNotification('Logout failed', 'error');
+      }
+    });
+    
+    cancelBtn?.addEventListener('click', () => {
+      this.closeModal('logoutModal');
+    });
+  }
+
   // Testimonials
   setupTestimonials() {
     const track = document.getElementById('testimonialTrack');
@@ -350,6 +574,11 @@ class AdvanceTravels {
     // Open modal function
     window.openLoginModal = () => {
       this.openModal('loginModal');
+    };
+
+    // Payment modal
+    window.openPaymentModal = () => {
+      this.openModal('paymentModal');
     };
 
     // Close modal when clicking close button or outside
@@ -568,6 +797,25 @@ class AdvanceTravels {
     }
   }
 
+  // Dashboard Pricing
+  setupDashboardPricing() {
+    const selectedCountry = localStorage.getItem('selectedCountry');
+    if (!selectedCountry || !this.countryPricing[selectedCountry]) return;
+
+    const pricing = this.countryPricing[selectedCountry];
+    const pricingCard = document.querySelector('.pricing-card');
+    
+    if (pricingCard) {
+      const countryName = pricingCard.querySelector('.pricing-country');
+      const registrationFee = pricingCard.querySelector('.registration-fee');
+      const afterVisaFee = pricingCard.querySelector('.after-visa-fee');
+      
+      if (countryName) countryName.textContent = selectedCountry;
+      if (registrationFee) registrationFee.textContent = `$${pricing.registration}`;
+      if (afterVisaFee) afterVisaFee.textContent = `$${pricing.afterVisa}`;
+    }
+  }
+
   // Utility functions
   static formatNumber(num) {
     return num.toLocaleString();
@@ -613,26 +861,20 @@ window.showNotification = (message, type, duration) => {
   }
 };
 
-window.logout = async () => {
-  try {
-    const response = await fetch('/auth/logout', { method: 'POST' });
-    const result = await response.json();
-    
-    if (result.success) {
-      window.showNotification('Logged out successfully', 'success');
-      setTimeout(() => {
-        window.location.href = result.redirect;
-      }, 1000);
-    }
-  } catch (error) {
-    console.error('Logout error:', error);
-    window.showNotification('Logout failed', 'error');
-  }
+// Payment notification function
+window.notifyPayment = () => {
+  window.showNotification('Payment notification sent successfully!', 'success');
+  document.getElementById('paymentModal').style.display = 'none';
 };
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   window.advanceTravels = new AdvanceTravels();
+  
+  // Setup dashboard pricing if on dashboard page
+  if (window.location.pathname.includes('/dashboard')) {
+    window.advanceTravels.setupDashboardPricing();
+  }
 });
 
 // Add CSS for ripple animation

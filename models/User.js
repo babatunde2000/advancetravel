@@ -80,6 +80,9 @@ const userSchema = new mongoose.Schema({
   sessionId: {
     type: String,
     unique: true
+  },
+  profilePicture: {
+    type: String
   }
 }, {
   timestamps: true

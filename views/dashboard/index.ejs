@@ -45,12 +45,38 @@
                 </div>
             </div>
             
+            <!-- Pricing Card -->
+            <div class="dashboard-card pricing-card">
+                <h3>Your Investment Plan</h3>
+                <div class="pricing-details">
+                    <div class="pricing-item">
+                        <span class="pricing-label">Country:</span>
+                        <span class="pricing-country"><%= user.preferredCountry %></span>
+                    </div>
+                    <div class="pricing-item">
+                        <span class="pricing-label">Registration Fee:</span>
+                        <span class="pricing-amount registration-fee">$800</span>
+                    </div>
+                    <div class="pricing-item">
+                        <span class="pricing-label">After Visa Fee:</span>
+                        <span class="pricing-amount after-visa-fee">$3500</span>
+                    </div>
+                </div>
+                <button class="pay-now-btn" onclick="openPaymentModal()">Pay Now</button>
+            </div>
+            
             <!-- Profile Summary -->
             <div class="dashboard-card profile-card">
                 <div class="card-header">
                     <h3>Profile Summary</h3>
                     <a href="/dashboard/profile" class="edit-link">Edit</a>
                 </div>
+                
+                <% if (user.profilePicture) { %>
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <img src="/uploads/<%= user.profilePicture %>" alt="Profile Picture" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-color);">
+                </div>
+                <% } %>
                 
                 <div class="profile-info">
                     <div class="info-item">
@@ -126,6 +152,50 @@
                         </a>
                         
                         <a href="mailto:support@advancetravels.com" class="support-btn">
+<!-- Payment Modal -->
+<div id="paymentModal" class="payment-modal">
+    <div class="payment-modal-content">
+        <span class="close-modal" onclick="document.getElementById('paymentModal').style.display='none'">&times;</span>
+        <h3>Payment Instructions</h3>
+        <p>Choose your preferred payment method:</p>
+        
+        <div class="payment-options">
+            <div class="payment-option">
+                <h4>Bank Transfer</h4>
+                <p>Account: Advanze Travels Ltd.<br>
+                Account Number: 1234567890<br>
+                Routing: 987654321<br>
+                Reference: Your Name + Application ID</p>
+            </div>
+            
+            <div class="payment-option">
+                <h4>PayPal</h4>
+                <p>Send payment to: payments@advanzeTravels.com<br>
+                Include your full name and application reference in the note.</p>
+            </div>
+            
+            <div class="payment-option">
+                <h4>Western Union</h4>
+                <p>Receiver: Advanze Travels<br>
+                Location: New York, USA<br>
+                Please send MTCN number after transfer.</p>
+            </div>
+            
+            <div class="payment-option">
+                <h4>Cryptocurrency</h4>
+                <p>Bitcoin: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa<br>
+                Ethereum: 0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4<br>
+                Send transaction ID after payment.</p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 2rem;">
+            <button class="btn btn-primary" onclick="notifyPayment()">
+                Notify Us After Payment
+            </button>
+        </div>
+    </div>
+</div>
                             <span>📧</span>
                             Email
                         </a>
